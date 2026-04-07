@@ -145,6 +145,7 @@
     <string name="rights">Rights</string>
     <string name="contributors">Contributors</string>
     <string name="relations">Relations</string>
+    <string name="guest_login">以游客身份登录</string>
 
     <!-- Audit log -->
     <string name="auditlog_Acl">ACL</string>
