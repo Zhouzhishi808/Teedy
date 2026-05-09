@@ -23,7 +23,7 @@ pipeline {
         }
         stage('JaCoCo') {
             steps {
-                sh 'mvn jacoco:report'
+                sh 'mvn org.jacoco:jacoco-maven-plugin:report'
             }
         }
         stage('Javadoc') {
