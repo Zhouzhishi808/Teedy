@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
     stages {
@@ -13,7 +14,8 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh 'mvn test -Dmaven.test.failure.ignore=true'
+                // prepare-agent 必须在 test 之前运行，才能生成 jacoco.exec 覆盖率数据
+                sh 'mvn org.jacoco:jacoco-maven-plugin:prepare-agent test -Dmaven.test.failure.ignore=true'
             }
         }
         stage('PMD') {
