@@ -199,6 +199,13 @@
     </dependency>
   </dependencies>
 
+  <distributionManagement>
+        <site>
+            <id>local-site</id>
+            <url>file://${project.build.directory}/site</url>
+        </site>
+  </distributionManagement>
+
   <profiles>
     <!-- Development profile (active by default) -->
     <profile>
