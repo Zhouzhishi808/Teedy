@@ -50,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         final EditText txtPassword = (EditText) findViewById(R.id.txtPassword);
         final EditText txtValidationCode = (EditText) findViewById(R.id.txtValidationCode);
         final Button btnConnect = (Button) findViewById(R.id.btnConnect);
+        final Button btnGuest = (Button) findViewById(R.id.btnGuest);
         loginForm = findViewById(R.id.loginForm);
         progressBar = findViewById(R.id.progressBar);
         
@@ -125,6 +126,48 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 } catch (IllegalArgumentException e) {
                     // Given URL is not valid
+                    loginForm.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
+                    PreferenceUtil.setServerUrl(LoginActivity.this, null);
+                    DialogUtil.showOkDialog(LoginActivity.this, R.string.invalid_url_title, R.string.invalid_url);
+                }
+            }
+        });
+
+        // Guest login button
+        btnGuest.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loginForm.setVisibility(View.GONE);
+                progressBar.setVisibility(View.VISIBLE);
+
+                PreferenceUtil.setServerUrl(LoginActivity.this, txtServer.getText().toString());
+
+                try {
+                    UserResource.login(getApplicationContext(), "guest", "", "",
+                            new HttpCallback() {
+                        @Override
+                        public void onSuccess(JSONObject json) {
+                            PreferenceUtil.resetUserCache(getApplicationContext());
+
+                            ApplicationContext.getInstance().fetchUserInfo(LoginActivity.this, new CallbackListener() {
+                                @Override
+                                public void onComplete() {
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(JSONObject json, Exception e) {
+                            loginForm.setVisibility(View.VISIBLE);
+                            progressBar.setVisibility(View.GONE);
+                            DialogUtil.showOkDialog(LoginActivity.this, R.string.network_error_title, R.string.network_error);
+                        }
+                    });
+                } catch (IllegalArgumentException e) {
                     loginForm.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
                     PreferenceUtil.setServerUrl(LoginActivity.this, null);
