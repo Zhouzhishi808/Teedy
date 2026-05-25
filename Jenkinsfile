@@ -1,6 +1,11 @@
 
 pipeline {
     agent any
+    environment {
+        DOCKER_HUB_CREDENTIALS = 'dockerhub_credentials'
+        DOCKER_IMAGE = 'zzshi08/teedy'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+    }
     stages {
         stage('Clean') {
             steps {
@@ -14,7 +19,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-                // prepare-agent 必须在 test 之前运行，才能生成 jacoco.exec 覆盖率数据
                 sh 'mvn org.jacoco:jacoco-maven-plugin:prepare-agent test -Dmaven.test.failure.ignore=true'
             }
         }
@@ -41,6 +45,33 @@ pipeline {
         stage('Package') {
             steps {
                 sh 'mvn package -DskipTests'
+            }
+        }
+        stage('Building image') {
+            steps {
+                script {
+                    docker.build("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
+                }
+            }
+        }
+        stage('Upload image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKER_HUB_CREDENTIALS) {
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
+                    }
+                }
+            }
+        }
+        stage('Run containers') {
+            steps {
+                script {
+                    sh 'docker stop teedy-container-8081 || true'
+                    sh 'docker rm teedy-container-8081 || true'
+                    docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run('--name teedy-container-8081 -d -p 8081:8080')
+                    sh 'docker ps --filter "name=teedy-container"'
+                }
             }
         }
     }
